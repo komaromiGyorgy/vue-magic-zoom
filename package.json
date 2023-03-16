@@ -1,6 +1,6 @@
 {
   "name": "vue-magic-zoom",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "private": false,
   "description": "🔎 Easy to use image zoom lens library for vue",
   "author": "Komi <komi@yorgsoft.com>",
