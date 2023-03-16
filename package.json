@@ -1,6 +1,6 @@
 {
   "name": "vue-magic-zoom",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "private": false,
   "description": "🌙 A lightweight Vue 3 image zoomer library",
   "repository": "https://github.com/komaromiGyorgy/vue-magic-zoom",
@@ -27,7 +27,7 @@
   },
   "scripts": {
     "dev": "vite",
-    "build": "rimraf dist && vue-tsc && vite build",
+    "build": "rimraf dist && vue-tsc --declaration --emitDeclarationOnly && vite build",
     "preview": "vite preview",
     "test:unit": "vitest",
     "build-only": "vite build",
