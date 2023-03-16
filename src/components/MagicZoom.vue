@@ -6,9 +6,10 @@
       </div>
     </div>
     <img
-      class="magic-zoom-image"
-      :src="src"
       ref="originalImage"
+      class="magic-zoom-image"
+      :alt="alt"
+      :src="src"
       @mousemove="mouseMoved"
       @mouseover="onMouseEnter"
       @mouseout="onMousLeave"
@@ -18,7 +19,7 @@
 </template>
 
 <script setup lang="ts">
-import { computed, onMounted, onUnmounted, ref } from 'vue';
+import { computed, onMounted, onUnmounted, ref, watchEffect } from 'vue';
 
 export interface Props {
   src: string;
@@ -29,6 +30,7 @@ export interface Props {
   width?: string | number;
   height?: string | number;
   alt?: string;
+  fit?: 'cover' | 'contain' | 'fill' | 'none' | 'scale-down' | 'initial';
 }
 
 const props = withDefaults(defineProps<Props>(), {
@@ -37,19 +39,30 @@ const props = withDefaults(defineProps<Props>(), {
   lensSize: 100,
   width: '100%',
   height: '100%',
+  fit: 'initial',
 });
 
+const emit = defineEmits<{
+  (event: 'change:lens', lesnState: boolean): void;
+}>();
 const isImageHovered = ref(false);
 const isModifierPressed = ref(false);
-const isLensShown = computed(() => isImageHovered.value && isModifierPressed.value);
-const opacity = computed(() => (isLensShown.value ? 1 : 0));
-const cursor = computed(() => (isLensShown.value ? 'zoom-in' : 'default'));
 const imageWidth = ref(0);
 const imageHeight = ref(0);
-const originalImage = ref<HTMLImageElement>();
-
+const originalImage = ref();
 const lensX = ref(0);
 const lensY = ref(0);
+
+const isLensShown = computed(() =>
+  props.modifier ? isImageHovered.value && isModifierPressed.value : isImageHovered.value
+);
+
+watchEffect(() => {
+  emit('change:lens', isLensShown.value);
+});
+
+const opacity = computed(() => (isLensShown.value ? 1 : 0));
+const cursor = computed(() => (isLensShown.value ? 'zoom-in' : 'default'));
 
 function mouseMoved(event: MouseEvent) {
   lensX.value = event.offsetX;
@@ -70,22 +83,31 @@ async function onImageLoaded() {
   imageWidth.value = originalImage.value.clientWidth;
 }
 
-onMounted(() => {
-  document.onkeydown = (event: KeyboardEvent) => (isModifierPressed.value = props.modifier === event.code);
-  document.onkeyup = () => (isModifierPressed.value = false);
-});
+function onKeydown(event: KeyboardEvent) {
+  isModifierPressed.value = props.modifier === event.code;
+}
 
+function onKeyUp() {
+  isModifierPressed.value = false;
+}
+
+onMounted(() => {
+  document.addEventListener('keydown', onKeydown);
+  document.addEventListener('keyup', onKeyUp);
+});
 onUnmounted(() => {
-  document.onkeydown = null;
-  document.onkeyup = null;
+  document.removeEventListener('keydown', onKeydown);
+  document.removeEventListener('keyup', onKeyUp);
 });
 </script>
 
 <style scoped>
 .magic-zoom {
   position: relative;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
 }
-
 .magic-zoom-lens {
   transition: opacity 0.25s ease-in-out;
   overflow: hidden;
@@ -101,30 +123,30 @@ onUnmounted(() => {
   top: v-bind(lensY + 'px');
   left: v-bind(lensX + 'px');
   overflow: hidden;
+  border: 1px solid white;
 }
-
 .magic-zoom-image {
   width: v-bind(width);
   height: v-bind(height);
-  aspect-ratio: 16 / 9;
-  object-fit: contain;
+  aspect-ratio: v-bind(aspectRatio);
+  object-fit: v-bind(fit);
   background: black;
   cursor: v-bind(cursor);
   overflow: hidden;
 }
-
 .magic-zoom-lens-box {
   transform: translate(50%, 50%);
-  width: v-bind(imageWidth + 'px');
-  height: v-bind(imageHeight + 'px');
+  width: v-bind(lensSize + 'px');
+  height: v-bind(lensSize + 'px');
 }
-
 .magic-zoom-lens-image {
-  position: absolute;
+  position: fixed;
   width: v-bind(imageWidth * zoomScale + 'px');
   height: v-bind(imageHeight * zoomScale + 'px');
-  aspect-ratio: 16 / 9;
-  object-fit: contain;
+  aspect-ratio: v-bind(aspectRatio);
+  object-fit: v-bind(fit);
+  overflow: hidden;
+  display: inline;
   transform: translate(v-bind(-(lensX * zoomScale) + 'px'), v-bind(-(lensY * zoomScale) + 'px'));
 }
 </style>
