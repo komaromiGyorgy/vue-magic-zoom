@@ -19,86 +19,87 @@
 </template>
 
 <script setup lang="ts">
-import { computed, onMounted, onUnmounted, ref, watchEffect } from 'vue';
+import { computed, onMounted, onUnmounted, ref, watchEffect } from 'vue'
 
 export interface Props {
-  src: string;
-  zoomScale?: number;
-  aspectRatio?: number;
-  lensSize?: number;
-  modifier?: string;
-  width?: string | number;
-  height?: string | number;
-  alt?: string;
-  fit?: 'cover' | 'contain' | 'fill' | 'none' | 'scale-down' | 'initial';
+  src: string
+  zoomScale?: number
+  aspectRatio?: number
+  lensSize?: number
+  modifier?: string
+  width?: string | number
+  height?: string | number
+  alt?: string
+  fit?: 'cover' | 'contain' | 'fill' | 'none' | 'scale-down' | 'initial'
 }
 
 const props = withDefaults(defineProps<Props>(), {
-  zoomScale: 3,
+  zoomScale: 4,
   aspectRatio: 16 / 9,
-  lensSize: 100,
+  lensSize: 200,
   width: '100%',
   height: '100%',
   fit: 'initial',
-});
+  modifier: ''
+})
 
 const emit = defineEmits<{
-  (event: 'change:lens', lesnState: boolean): void;
-}>();
-const isImageHovered = ref(false);
-const isModifierPressed = ref(false);
-const imageWidth = ref(0);
-const imageHeight = ref(0);
-const originalImage = ref();
-const lensX = ref(0);
-const lensY = ref(0);
+  (event: 'change:lens', lesnState: boolean): void
+}>()
+const isImageHovered = ref(false)
+const isModifierPressed = ref(false)
+const imageWidth = ref(0)
+const imageHeight = ref(0)
+const originalImage = ref()
+const lensX = ref(0)
+const lensY = ref(0)
 
 const isLensShown = computed(() =>
   props.modifier ? isImageHovered.value && isModifierPressed.value : isImageHovered.value
-);
+)
 
 watchEffect(() => {
-  emit('change:lens', isLensShown.value);
-});
+  emit('change:lens', isLensShown.value)
+})
 
-const opacity = computed(() => (isLensShown.value ? 1 : 0));
-const cursor = computed(() => (isLensShown.value ? 'zoom-in' : 'default'));
+const opacity = computed(() => (isLensShown.value ? 1 : 0))
+const cursor = computed(() => (isLensShown.value ? 'zoom-in' : 'default'))
 
 function mouseMoved(event: MouseEvent) {
-  lensX.value = event.offsetX;
-  lensY.value = event.offsetY;
+  lensX.value = event.offsetX
+  lensY.value = event.offsetY
 }
 
 function onMouseEnter() {
-  isImageHovered.value = true;
+  isImageHovered.value = true
 }
 
 function onMousLeave() {
-  isImageHovered.value = false;
+  isImageHovered.value = false
 }
 
 async function onImageLoaded() {
-  if (!originalImage.value) return;
-  imageHeight.value = originalImage.value.clientHeight;
-  imageWidth.value = originalImage.value.clientWidth;
+  if (!originalImage.value) return
+  imageHeight.value = originalImage.value.clientHeight
+  imageWidth.value = originalImage.value.clientWidth
 }
 
 function onKeydown(event: KeyboardEvent) {
-  isModifierPressed.value = props.modifier === event.code;
+  isModifierPressed.value = props.modifier === event.code
 }
 
 function onKeyUp() {
-  isModifierPressed.value = false;
+  isModifierPressed.value = false
 }
 
 onMounted(() => {
-  document.addEventListener('keydown', onKeydown);
-  document.addEventListener('keyup', onKeyUp);
-});
+  document.addEventListener('keydown', onKeydown)
+  document.addEventListener('keyup', onKeyUp)
+})
 onUnmounted(() => {
-  document.removeEventListener('keydown', onKeydown);
-  document.removeEventListener('keyup', onKeyUp);
-});
+  document.removeEventListener('keydown', onKeydown)
+  document.removeEventListener('keyup', onKeyUp)
+})
 </script>
 
 <style scoped>
@@ -123,7 +124,7 @@ onUnmounted(() => {
   top: v-bind(lensY + 'px');
   left: v-bind(lensX + 'px');
   overflow: hidden;
-  border: 1px solid white;
+  border: 2px solid white;
 }
 .magic-zoom-image {
   width: v-bind(width);
